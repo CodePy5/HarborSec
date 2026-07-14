@@ -1,0 +1,56 @@
+<html>
+<head>
+    <title>WAVE</title>
+    <style>
+        body {
+            background-image: url("/WAVE-background.jpg");
+        }
+        div {
+            display: table; /* Makes the div only as wide as its content */
+            background-color: rgba(249, 249, 249, 0.8); /* Slightly transparent background */
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Connection Information</h1>
+        Welcome to the Workflow for Audit Visibilty and Enrichment (WAVE)!<br>
+        You are connected using ##UPN##
+        <a href="/logout">Logout</a>
+        <br>
+    </div>
+    <br>
+    <div>
+        <h1>Retrieve Audit Log</h1>
+        <form action="/audit" method="get">
+            <table>
+                <tr>
+                    <td>
+                        <label for="duration">Number of Days:</label>
+                    </td>
+                    <td>
+                        <input type="number" id="duration" name="duration" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="user">UPN of User:</label>
+                    </td>
+                    <td>
+                        <input type="text" id="user" name="user" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button type="submit">Start Audit</button>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <br>
+</body>
