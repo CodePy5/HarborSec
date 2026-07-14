@@ -4,6 +4,7 @@
     <style>
         body {
             background-image: url("/WAVE-background.jpg");
+            background-size: cover;
         }
         div {
             display: table; /* Makes the div only as wide as its content */
@@ -12,6 +13,11 @@
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #imagecredit {
+            position:absolute;
+            bottom: 10px;
+            right: 10px;
         }
     </style>
 </head>
@@ -33,7 +39,7 @@
                         <label for="duration">Number of Days:</label>
                     </td>
                     <td>
-                        <input type="number" id="duration" name="duration" required>
+                        <input type="number" id="duration" name="duration" value="30" required>
                     </td>
                 </tr>
                 <tr>
@@ -45,6 +51,14 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>
+                        <label for="user">AbuseIPDB API Key:</label>
+                    </td>
+                    <td>
+                        <input type="password" id="aipdb" name="aipdb" required>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="2">
                         <button type="submit">Start Audit</button>
                     </td>
@@ -53,4 +67,7 @@
         </form>
     </div>
     <br>
+    <div id="imagecredit">
+        <p style="font-size: 75%;">Background image courtesy of <a href="https://technat.codepy.org/">Technical Nature Photos</a>. All rights reserved.</p>
+    </div>
 </body>

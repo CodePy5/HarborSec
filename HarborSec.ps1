@@ -219,6 +219,7 @@ while ($activeSession) {
     Write-Host $queryParams
 
     switch ($pagePath) {
+        #Sharkphin URLs
         "/" {
             # Default page, do nothing special
             $htmlFilePath = "$PSScriptRoot\app.html"
@@ -436,6 +437,81 @@ while ($activeSession) {
             $response = "HTTP/1.1 200 OK`r`nContent-Type: text/html`r`n`r`n$htmlContent"
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($response)
         }
+        #WAVE URLS
+        "/wave" {
+            # WAVE homepage
+            $htmlFilePath = "$PSScriptRoot\wave.html"
+            $htmlContent = Get-Content -Path $htmlFilePath -Raw
+            $htmlContent =  $htmlContent -replace "##UPN##", $UPN
+            $response = "HTTP/1.1 200 OK`r`nContent-Type: text/html`r`n`r`n$htmlContent"
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($response)
+        }
+        "/WAVE-background.jpg" {
+            # Handle background request
+            $backgroundPath = "$PSScriptRoot/WAVE-background.jpg"
+            $backgroundContent = [System.IO.File]::ReadAllBytes($backgroundPath)
+            $response = "HTTP/1.1 200 OK`r`nContent-Type: image/jpg`r`n`r`n"
+            $buffer = [System.Text.Encoding]::ASCII.GetBytes($response) + $backgroundContent
+        }
+        "/audit" {
+            # Return audit status
+            Write-Host "Handling audit status request"
+
+            # Extract search query parameters
+            $auditDays = $queryParams["duration"]
+            $auditUser = $queryParams["user"]
+            $abuseIPDB = $queryParams["aipdb"]
+
+            
+            if (($null -eq $exportSessionID) -and -not ($auditDays -as [int])) {
+                $valid = $false
+                $resultMessage = "The number of days must be a valid integer."
+                $auditStatus = "error"
+            } else {
+                if ($exportSessionID -eq $null) {
+                    #We are creating a new export session
+                    $StartDate = (Get-Date).AddDays(-$auditDays)
+                    $EndDate = Get-Date
+                    Write-Host "Creating search session for for $auditUser from $StartDate to $EndDate..."
+
+                    $auditData = @()
+                    $exportSessionID = (New-Guid).Guid
+                    $auditEvents = 0
+                    $resultMessage = "An audit session is being started..."
+                    $auditStatus = "ongoing"
+                }
+                else {
+                    #We are checking the status of an existing export session
+                    Write-Host "Checking status of search session $exportSessionID..."
+                    #Get next batch
+                    $Batch = Search-UnifiedAuditLog `
+                        -StartDate $StartDate `
+                        -EndDate $EndDate `
+                        -UserIds $auditUser `
+                        -SessionId $exportSessionID `
+                        -SessionCommand ReturnLargeSet `
+                        -ResultSize 5000
+
+                    if ($Batch) {
+                        $auditData += $Batch
+                        $auditEvents += $Batch.Count
+                        $resultMessage = "Processing $auditEvents events..."
+                        $auditStatus = "ongoing"
+                    } else {
+                        $resultMessage = "Total events found: $auditEvents"
+                        $auditStatus = "completed"
+                    }
+                }
+            }
+            $exportSessionID = $null
+            $htmlFilePath = "$PSScriptRoot\audit.html"
+            $htmlContent = Get-Content -Path $htmlFilePath -Raw
+            $htmlContent =  $htmlContent -replace "##RESULTMESSAGE##", $resultMessage
+            $htmlContent =  $htmlContent -replace "##STATUS##", $auditStatus
+            $response = "HTTP/1.1 200 OK`r`nContent-Type: text/html`r`n`r`n$htmlContent"
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($response)
+        }
+        #404
         default {
             # Handle unknown page request
             Write-Host "Unknown page request: $pageRequest"

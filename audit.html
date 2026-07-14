@@ -1,0 +1,47 @@
+<html>
+<head>
+    <title>Search Submitted</title>
+    <style>
+        body {
+            background-image: url("/WAVE-background.jpg");
+            background-size: cover;
+        }
+        div {
+            display: table; /* Makes the div only as wide as its content */
+            background-color: rgba(249, 249, 249, 0.8); /* Slightly transparent background */
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #imagecredit {
+            position:absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <p>Please wait on this page. The audit status will be shown below:</p>
+        <p>##RESULTMESSAGE##</p>
+        <script>
+            const status = "##STATUS##";
+            if (status === "completed") {
+                window.location.href = "/audit";
+            } else if (status === "ongoing") {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 5000);
+            } else{
+                console.log("A server side error has occured.");
+                setTimeout(function() {
+                    window.location.href = "/wave"
+                }, 10000);
+            }
+        </script>
+    </div>
+    <div id="imagecredit">
+        <p style="font-size: 75%;">Background image courtesy of <a href="https://technat.codepy.org/">Technical Nature Photos</a>. All rights reserved.</p>
+    </div>
+</body>
