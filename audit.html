@@ -28,7 +28,9 @@
         <script>
             const status = "##STATUS##";
             if (status === "completed") {
-                window.location.href = "/audit";
+                setTimeout(function() {
+                    window.location.href = "/wave"
+                }, 10000);
             } else if (status === "ongoing") {
                 setTimeout(function() {
                     window.location.reload();

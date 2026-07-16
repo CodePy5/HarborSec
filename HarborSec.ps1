@@ -453,22 +453,16 @@ while ($activeSession) {
             $response = "HTTP/1.1 200 OK`r`nContent-Type: image/jpg`r`n`r`n"
             $buffer = [System.Text.Encoding]::ASCII.GetBytes($response) + $backgroundContent
         }
-        "/audit" {
+        "/auditstatus" {
             # Return audit status
             Write-Host "Handling audit status request"
-
-            # Extract search query parameters
-            $auditDays = $queryParams["duration"]
-            $auditUser = $queryParams["user"]
-            $abuseIPDB = $queryParams["aipdb"]
-
             
             if (($null -eq $exportSessionID) -and -not ($auditDays -as [int])) {
                 $valid = $false
                 $resultMessage = "The number of days must be a valid integer."
                 $auditStatus = "error"
             } else {
-                if ($exportSessionID -eq $null) {
+                if ($null -eq $exportSessionID) {
                     #We are creating a new export session
                     $StartDate = (Get-Date).AddDays(-$auditDays)
                     $EndDate = Get-Date
@@ -500,14 +494,24 @@ while ($activeSession) {
                     } else {
                         $resultMessage = "Total events found: $auditEvents"
                         $auditStatus = "completed"
+                        $exportSessionID = $null
                     }
                 }
             }
-            $exportSessionID = $null
+            
+        }
+        "/audit" {
+            # Extract search query parameters
+            $auditDays = $queryParams["duration"]
+            $auditUser = $queryParams["user"]
+            $abuseIPDB = $queryParams["aipdb"]
+
+
+
             $htmlFilePath = "$PSScriptRoot\audit.html"
             $htmlContent = Get-Content -Path $htmlFilePath -Raw
-            $htmlContent =  $htmlContent -replace "##RESULTMESSAGE##", $resultMessage
-            $htmlContent =  $htmlContent -replace "##STATUS##", $auditStatus
+            #$htmlContent =  $htmlContent -replace "##RESULTMESSAGE##", $resultMessage
+            #$htmlContent =  $htmlContent -replace "##STATUS##", $auditStatus
             $response = "HTTP/1.1 200 OK`r`nContent-Type: text/html`r`n`r`n$htmlContent"
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($response)
         }
