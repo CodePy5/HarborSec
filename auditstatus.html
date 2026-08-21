@@ -26,10 +26,21 @@
         <p>Please wait on this page. The audit status will be shown below:</p>
         <p>##RESULTMESSAGE##</p>
         <script>
-            const page = "/##REDIRECT##";
-            setTimeout(function() {
-                window.location.href = page
-            }, 5000);
+            const status = "##STATUS##";
+            if (status === "completed") {
+                setTimeout(function() {
+                    window.location.href = "/wave"
+                }, 10000);
+            } else if (status === "ongoing") {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 5000);
+            } else{
+                console.log("A server side error has occured.");
+                setTimeout(function() {
+                    window.location.href = "/wave"
+                }, 10000);
+            }
         </script>
     </div>
     <div id="imagecredit">

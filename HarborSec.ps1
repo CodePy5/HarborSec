@@ -456,49 +456,29 @@ while ($activeSession) {
         "/auditstatus" {
             # Return audit status
             Write-Host "Handling audit status request"
-            
-            if (($null -eq $exportSessionID) -and -not ($auditDays -as [int])) {
-                $valid = $false
-                $resultMessage = "The number of days must be a valid integer."
-                $auditStatus = "error"
+
+            #We are checking the status of an existing export session
+            Write-Host "Checking status of search session $exportSessionID..."
+            #Get next batch
+            $Batch = Search-UnifiedAuditLog `
+                -StartDate $StartDate `
+                -EndDate $EndDate `
+                -UserIds $auditUser `
+                -SessionId $exportSessionID `
+                -SessionCommand ReturnLargeSet `
+                -ResultSize 5000
+
+            if ($Batch) {
+                $auditData += $Batch
+                $auditEvents += $Batch.Count
+                $resultMessage = "Download $auditEvents events..."
+                $auditStatus = "ongoing"
             } else {
-                if ($null -eq $exportSessionID) {
-                    #We are creating a new export session
-                    $StartDate = (Get-Date).AddDays(-$auditDays)
-                    $EndDate = Get-Date
-                    Write-Host "Creating search session for for $auditUser from $StartDate to $EndDate..."
-
-                    $auditData = @()
-                    $exportSessionID = (New-Guid).Guid
-                    $auditEvents = 0
-                    $resultMessage = "An audit session is being started..."
-                    $auditStatus = "ongoing"
-                }
-                else {
-                    #We are checking the status of an existing export session
-                    Write-Host "Checking status of search session $exportSessionID..."
-                    #Get next batch
-                    $Batch = Search-UnifiedAuditLog `
-                        -StartDate $StartDate `
-                        -EndDate $EndDate `
-                        -UserIds $auditUser `
-                        -SessionId $exportSessionID `
-                        -SessionCommand ReturnLargeSet `
-                        -ResultSize 5000
-
-                    if ($Batch) {
-                        $auditData += $Batch
-                        $auditEvents += $Batch.Count
-                        $resultMessage = "Processing $auditEvents events..."
-                        $auditStatus = "ongoing"
-                    } else {
-                        $resultMessage = "Total events found: $auditEvents"
-                        $auditStatus = "completed"
-                        $exportSessionID = $null
-                    }
-                }
-            }
-            
+                $resultMessage = "Total events found: $auditEvents"
+                $auditStatus = "completed"
+                $exportSessionID = $null
+                Write-Host $auditData
+            }            
         }
         "/audit" {
             # Extract search query parameters
@@ -506,12 +486,28 @@ while ($activeSession) {
             $auditUser = $queryParams["user"]
             $abuseIPDB = $queryParams["aipdb"]
 
+            #Validate params
+            if (-not ($auditDays -as [int])) {
+                $resultMessage = "The number of days must be a valid integer."
+                $redirect = "wave"
+            } else{
 
+                #Create new audit
+                $StartDate = (Get-Date).AddDays(-$auditDays)
+                $EndDate = Get-Date
+                Write-Host "Creating search session for for $auditUser from $StartDate to $EndDate..."
+
+                $auditData = @()
+                $exportSessionID = (New-Guid).Guid
+                $auditEvents = 0
+                $resultMessage = "An audit session is being started..."
+                $redirect = "auditstatus"
+            }
 
             $htmlFilePath = "$PSScriptRoot\audit.html"
             $htmlContent = Get-Content -Path $htmlFilePath -Raw
-            #$htmlContent =  $htmlContent -replace "##RESULTMESSAGE##", $resultMessage
-            #$htmlContent =  $htmlContent -replace "##STATUS##", $auditStatus
+            $htmlContent =  $htmlContent -replace "##REDIRECT##", $redirect
+            $htmlContent =  $htmlContent -replace "##RESULTMESSAGE##", $resultMessage
             $response = "HTTP/1.1 200 OK`r`nContent-Type: text/html`r`n`r`n$htmlContent"
             $buffer = [System.Text.Encoding]::UTF8.GetBytes($response)
         }
